@@ -65,10 +65,32 @@ clear; bundle exec rake; bundle exec rubocop
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. 
-You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+### Git
 
-To install this gem onto your local machine, run `bundle exec rake install`. 
+My `git` process is as follows:
+
+There is a `master` branch. 
+From that a `develop` branch is created.
+For each "feature" a new numbered branch is created:
+
+```bash
+kim@tinka ~/RubymineProjects/JFormalize (develop)$ git checkout -b features/001_ExtendReadme
+Switched to a new branch 'features/001_ExtendReadme'
+kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$
+```
+
+The name and machine is irrelevant, but the current branch is shown in brackets.
+Note that the numbering is somewhat arbitrary and once main line development is completed, it would switch to issue numbers.
+
+Once a feature branch is created, changes are made to the code base.
+Once these reach a reasonable point, a commit is made:
+
+```bash
+kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git commit -a -m 'Extended Readme'
+```
+
+### Versioning
+
 To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, 
 which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
 
