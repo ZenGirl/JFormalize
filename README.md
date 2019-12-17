@@ -88,9 +88,7 @@ Once a feature branch is created, changes are made to the code base.
 Once these reach a reasonable point, a commit is made:
 
 ```bash
-kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git commit -a -m 'Extended Readme'
-[features/001_ExtendReadme 57d9adb] Extended Readme
-1 file changed, 25 insertions(+), 3 deletions(-)
+git commit -a -m 'Extended Readme'
 ```
 
 And a push occurs:
@@ -125,7 +123,13 @@ Once done, only a `git push` is required.
 After the branch is complete and accepted, it can be merged back into `develop`:
 
 ```bash
+git checkout develop
+git merge features/001_ExtendReadme
+git push
 ```
+
+Once a set of features are complete, `develop` can be merged into `master`, the version updated and pushed.
+That done, the gem can be released.
 
 ### Versioning
 
