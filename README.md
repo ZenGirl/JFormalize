@@ -82,6 +82,8 @@ kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$
 The name and machine is irrelevant, but the current branch is shown in brackets.
 Note that the numbering is somewhat arbitrary and once main line development is completed, it would switch to issue numbers.
 
+> The *bash* scripts to provide this functionality is added to the base of this doc.
+
 Once a feature branch is created, changes are made to the code base.
 Once these reach a reasonable point, a commit is made:
 
@@ -100,7 +102,7 @@ To push the current branch and set the remote as upstream, use
 
     git push --set-upstream origin features/001_ExtendReadme
 
-kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)*$ git push --set-upstream origin features/001_ExtendReadme
+kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git push --set-upstream origin features/001_ExtendReadme
 Enumerating objects: 5, done.
 Counting objects: 100% (5/5), done.
 Delta compression using up to 8 threads
@@ -117,7 +119,13 @@ To github.com:ZenGirl/JFormalize.git
 Branch 'features/001_ExtendReadme' set up to track remote branch 'features/001_ExtendReadme' from 'origin'.
 ```
 
+The first notice only shows once if no upstream branch exists. 
+Once done, only a `git push` is required.
 
+After the branch is complete and accepted, it can be merged back into `develop`:
+
+```bash
+```
 
 ### Versioning
 
