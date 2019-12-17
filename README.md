@@ -87,7 +87,37 @@ Once these reach a reasonable point, a commit is made:
 
 ```bash
 kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git commit -a -m 'Extended Readme'
+[features/001_ExtendReadme 57d9adb] Extended Readme
+1 file changed, 25 insertions(+), 3 deletions(-)
 ```
+
+And a push occurs:
+
+```bash
+kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git push
+fatal: The current branch features/001_ExtendReadme has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin features/001_ExtendReadme
+
+kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)*$ git push --set-upstream origin features/001_ExtendReadme
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 749 bytes | 749.00 KiB/s, done.
+Total 3 (delta 2), reused 0 (delta 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+remote:
+remote: Create a pull request for 'features/001_ExtendReadme' on GitHub by visiting:
+remote:      https://github.com/ZenGirl/JFormalize/pull/new/features/001_ExtendReadme
+remote:
+To github.com:ZenGirl/JFormalize.git
+ * [new branch]      features/001_ExtendReadme -> features/001_ExtendReadme
+Branch 'features/001_ExtendReadme' set up to track remote branch 'features/001_ExtendReadme' from 'origin'.
+```
+
+
 
 ### Versioning
 
