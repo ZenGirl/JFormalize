@@ -1,0 +1,16 @@
+Metrics/LineLength:
+  Enabled: true
+  Severity: warning
+  Max: 120
+Metrics/BlockLength:
+  ExcludedMethods: ['describe', 'context']
+Metrics/MethodLength:
+  Enabled: true
+  Max: 20
+AllCops:
+  Exclude:
+    - 'test/**/*'
+    - 'bin/**/*'
+    - 'JFormalize.gemspec'
+    - 'Rakefile'
+    - 'Gemfile'
