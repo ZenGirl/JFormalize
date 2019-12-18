@@ -12,7 +12,8 @@ According to the dictionary, to formalize is to:
 While it is humorous to think of JSON involving solemnity, officialness or legality, 
 it certainly involves ceremony.
 
-This gem provides a simple way to validate a file, load it as JSON, parse it and formalize objects into ruby objects.
+This gem provides a simple way to validate a file, load it as JSON, parse it and formalize objects
+according to a provided schema into ruby objects.
 
 This involves a process like this:
 
@@ -23,20 +24,60 @@ This involves a process like this:
 
 ## `PreLoad`
 
-This involves verifying that a provide file pass the following tests:
+This involves verifying that a provided file pass the following tests:
 
 1. It must exist
 2. It must be a file (e.g. not a directory)
 3. It must be readable
 4. It must not be too big
-5. 
 
 The first 3 are self explanatory.
-Number 4 and 5 require some explanation.
+Number 4 requires some explanation.
 
 A file has a size and the gem tests that this size does not exceed a limit.
 The allowed maximum size either defaults to 1,000,000 characters or a value provided to the pre-loader.
 
+After the file has been verified, the provided schema has to be checked.
+Here is an example schema:
+
+```ruby
+schema = {
+  _id:             {type: :integer},
+  url:             {type: :url},
+  external_id:     {type: :guid},
+  name:            {type: :string},
+  alias:           {type: :string},
+  created_at:      {type: :datetime},
+  active:          {type: :boolean},
+  verified:        {type: :boolean},
+  shared:          {type: :boolean},
+  locale:          {type: :locale},
+  timezone:        {type: :timezone},
+  last_login_at:   {type: :datetime},
+  email:           {type: :email},
+  phone:           {type: :regex, match: /\d\d\d\d-\d\d\d-\d\d\d/},
+  signature:       {type: :string},
+  organization_id: {type: :integer},
+  tags:            {type: :array, subtype: :string},
+  suspended:       {type: :boolean},
+  role:            {type: :string, allowed: %w[admin agent end_user]}
+}.freeze
+```
+
+The "types" here are a set of constants internal to the gem.
+The allowed set is as follows:
+
+- `string` - must be a ruby string - can have `allowed` key-value array
+- `guid` - must match `/\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/`
+- `integer` - must be a ruby integer
+- `url` - simply match `%r{https?://[\S]+}`
+- `datetime` - succeeds a `Time.parse`
+- `boolean` - true or false
+- `locale` - at this point, simply a string
+- `timezone` - at this point, simply a string
+- `email` - must match `/\A([\w+\-]\.?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i`
+- `regex` - must match the provided `match` key-value
+- `array` - must be a ruby array - can have sub-type validation
 
 
 ## Installation
