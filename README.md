@@ -7,6 +7,26 @@ This gem was created based on several in-application gems created over the years
 The requirement to have a simple parser, validator, defaulter and formalizer for incoming JSON has recurred repeatedly for me over the years.
 This gem is simply a wrap up of those requirements.
 
+## Acknowledgements
+
+Due to my choice not to include any external runtime dependencies, this gem includes a cut-down version of `Interactor`.
+
+See https://github.com/collectiveidea/interactor for full codebase
+
+I **LOVE** this gem, and Collective Idea have some great gems.
+Show them some love at https://collectiveidea.com/
+
+Normally I would simply add the complete gem as a runtime dependency, but I'm avoiding
+having any external runtime dependencies.
+As such, I messed about pulling some code in but not others.
+Tests exist for this.
+
+Note that I've had to use rubocop directives so that the original
+code is as close to Collective Ideas code.
+
+Apologies.
+
+
 ## Details
 
 Loads, parses and validates JSON input into formalized ruby objects according to a schema.
