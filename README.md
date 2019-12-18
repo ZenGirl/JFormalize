@@ -1,6 +1,6 @@
 # JFormalize
 
-Loads, parses and validates a JSON file into formalized ruby objects according to a schema.
+Loads, parses and validates JSON input into formalized ruby objects according to a schema.
 
 According to the dictionary, to formalize is to:
 
@@ -12,7 +12,7 @@ According to the dictionary, to formalize is to:
 While it is humorous to think of JSON involving solemnity, officialness or legality, 
 it certainly involves ceremony.
 
-This gem provides a simple way to validate a file, load it as JSON, parse it and formalize objects
+This gem provides a simple way to validate an incoming JSON string, load it, parse it and formalize objects
 according to a provided schema into ruby objects.
 
 This involves a process like this:
@@ -24,20 +24,50 @@ This involves a process like this:
 
 ## `PreLoad`
 
-This involves verifying that a provided file pass the following tests:
+This involves verifying that a provided string pass the following tests:
 
-1. It must exist
-2. It must be a file (e.g. not a directory)
-3. It must be readable
-4. It must not be too big
+1. It must be a string
+2. It must match a simple JSON regex
+3. It must not be too big
+4. It must not be empty
+5. It must not contain non UTF-8 characters
 
-The first 3 are self explanatory.
-Number 4 requires some explanation.
+The first is self explanatory.
 
-A file has a size and the gem tests that this size does not exceed a limit.
+The incoming string must match a simple regex to proceed.
+That regex is shown below:
+
+```ruby
+# For reference, this is modified from:
+# https://stackoverflow.com/questions/2583472/regex-to-validate-json
+# rubocop:disable Style/MutableConstant, Style/RegexpLiteral
+JSON_REGEX = /(
+  # define subtypes and build up the json syntax, BNF-grammar-style
+  # The {0} is a hack to simply define them as named groups here but not match on them yet
+  # I added some atomic grouping to prevent catastrophic backtracking on invalid inputs
+  (?<number>  -?(?=[1-9]|0(?!\d))\d+(\.\d+)?([eE][+-]?\d+)?){0}
+  (?<boolean> true | false | null ){0}
+  (?<string>  " (?>[^"\\\\]* | \\\\ ["\\\\bfnrt\/] | \\\\ u [0-9a-f]{4} )* " ){0}
+  (?<array>   \[ (?> \g<json> (?: , \g<json> )* )? \s* \] ){0}
+  (?<pair>    \s* \g<string> \s* : \g<json> ){0}
+  (?<object>  \{ (?> \g<pair> (?: , \g<pair> )* )? \s* \} ){0}
+  (?<json>    \s* (?> \g<number> | \g<boolean> | \g<string> | \g<array> | \g<object> ) \s* ){0}
+)
+\A \g<json> \Z
+/uix
+# rubocop:enable Style/MutableConstant, Style/RegexpLiteral
+```
+
+The `rubocop` notations are simply to avoid unnecessary messages.
+
+The "must not be too big" requirement requires some explanation.
+
+The code tests that the string size does not exceed a limit.
 The allowed maximum size either defaults to 1,000,000 characters or a value provided to the pre-loader.
 
-After the file has been verified, the provided schema has to be checked.
+> **Note:** At some point this may be changed to use `max_objects` as well as `max_size`
+
+After the string has been verified, the provided schema has to be checked.
 Here is an example schema:
 
 ```ruby
@@ -67,7 +97,7 @@ schema = {
 The "types" here are a set of constants internal to the gem.
 The allowed set is as follows:
 
-- `string` - must be a ruby string - can have `allowed` key-value array
+- `string` - must be a ruby string - can have `allowed` value array
 - `guid` - must match `/\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b/`
 - `integer` - must be a ruby integer
 - `url` - simply match `%r{https?://[\S]+}`
@@ -79,6 +109,95 @@ The allowed set is as follows:
 - `regex` - must match the provided `match` key-value
 - `array` - must be a ruby array - can have sub-type validation
 
+> **Note:** There is no ability to have the schema recurse at this time.
+  
+> Floats et al will be supported in a later version 
+
+An example schema:
+
+```ruby
+schema = {
+  _id:             {type: :integer},
+  url:             {type: :url},
+  external_id:     {type: :guid},
+  name:            {type: :string},
+  alias:           {type: :string},
+  created_at:      {type: :datetime},
+  active:          {type: :boolean},
+  verified:        {type: :boolean},
+  shared:          {type: :boolean},
+  locale:          {type: :locale},
+  timezone:        {type: :timezone},
+  last_login_at:   {type: :datetime},
+  email:           {type: :email},
+  phone:           {type: :regex, match: /\d\d\d\d-\d\d\d-\d\d\d/},
+  signature:       {type: :string},
+  organization_id: {type: :integer},
+  tags:            {type: :array, subtype: :string},
+  suspended:       {type: :boolean},
+  role:            {type: :string, allowed: %w[admin agent end_user]}
+}.freeze
+```
+
+An incoming string may look like this:
+
+```ruby
+[{"_id":1,"url":"http://somewhere.over.the.rainbow.com/api/v2/users/1.json","external_id":"74341f74-9c79-49d5-9611-87ef9b6eb75f","name":"Edmund Glenn","alias":"Eddie","created_at":"2019-04-15T05:19:46 -10:00","active":true,"verified":true,"shared":false,"locale":"en-AU","timezone":"AEST","last_login_at":"2019-08-04T01:03:27 -10:00","email":"edmund.glenn@bianka.com","phone":"8335-422-718","signature":"Don't Worry Be Happy!","organization_id":119,"tags":["Brunsville","Juneeburg","Pricegan Beach","Mutgulbal"],"suspended":true,"role":"admin"}]
+```
+
+And, for clarity, this corresponds to the following hash:
+
+```ruby
+[
+  {
+    _id:             1,
+    url:             'http://somewhere.over.the.rainbow.com/api/v2/users/1.json',
+    external_id:     '74341f74-9c79-49d5-9611-87ef9b6eb75f',
+    name:            'Edmund Glenn',
+    alias:           'Eddie',
+    created_at:      '2019-04-15T05:19:46 -10:00',
+    active:          true,
+    verified:        true,
+    shared:          false,
+    locale:          'en-AU',
+    timezone:        'AEST',
+    last_login_at:   '2019-08-04T01:03:27 -10:00',
+    email:           'edmund.glenn@bianka.com',
+    phone:           '8335-422-718',
+    signature:       'Don\'t Worry Be Happy!',
+    organization_id: 119,
+    tags:            %w(Brunsville Juneeburg Pricegan\ Beach Mutgulbal),
+    suspended:       true,
+    role:            'admin'
+  }
+]
+```
+
+During the `PreLoad` phase, exceptions may be raised.
+All exceptions are in `JFormalise::Exceptions` and mostly wrap existing exceptions.
+The purpose of having separate exceptions is to provide fine grained control if required.
+
+The exceptions are shown below:
+
+| Exception | Meaning |
+| --------- | ------- |
+| InputIsEmpty | The incoming string is empty |
+| InputHasNonUtf8Chars | The incoming string has non UTF-8 characters |
+| InputNotJson | The incoming string does not match the JSON regex |
+| InputTooBig | The incoming string size exceeds the maximum size |
+| SchemaNotJson | The incoming schema does not match the JSON regex |
+| SchemaNotHash | The incoming schema is not a hash |
+| SchemaHashKeyInvalid | In the schema hash, a key pair does not match the allowed values |
+
+## `Load`
+
+The loader performs some basic tests before proceeding:
+
+1. 
+
+## `Objectify`
+
+## `Formalize`
 
 ## Installation
 
