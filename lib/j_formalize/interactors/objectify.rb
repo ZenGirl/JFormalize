@@ -2,8 +2,7 @@
 
 module JFormalize
   module Interactors
-    # Simply verifies that incoming context is valid.
-    # Checks max size, json_string and schema.
+    # Simply parses JSON into a set of raw objects
     class Objectify
       include JFormalize::Interactor
 
