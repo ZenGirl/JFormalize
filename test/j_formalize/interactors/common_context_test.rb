@@ -1,8 +1,8 @@
-require_relative '../test_helper'
+require_relative '../../test_helper'
 
 require 'minitest/autorun'
 
-require_relative '../../lib/j_formalize/interactor/common_context'
+require_relative '../../../lib/j_formalize/interactors/common_context'
 
 class CommonContextTest < Minitest::Test
 
@@ -87,8 +87,7 @@ class CommonContextTest < Minitest::Test
 
   def test_organizes
     result = TestOrganizer.call
-    ap result
-    assert_equal ['Interactor1','Interactor2'], result.handled
+    assert_equal %w(Interactor1 Interactor2), result.handled
   end
 
 end
