@@ -51,5 +51,11 @@ module JFormalize
       schema_type_must_be_valid:   'schema type must be valid'
     }.freeze
     # rubocop:enable Layout/AlignHash
+
+    GUID_RE = /\A\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b\z/.freeze
+
+    URL_RE = %r{https?://[\S]+}.freeze
+
+    EMAIL_RE = /\A([\w+\-]\.?)+@[a-z\d\-]+(\.[a-z]+)*\.[a-z]+\z/i.freeze
   end
 end

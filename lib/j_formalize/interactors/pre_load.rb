@@ -22,6 +22,8 @@ module JFormalize
         schema_type_must_be_valid
       end
 
+      private
+
       def max_size_must_be_reasonable
         context.max_size = 100_000 if context.max_size.nil?
         context.fail!(message: err(:max_size_invalid)) if context.max_size < 100 || context.max_size > 10_000_000
