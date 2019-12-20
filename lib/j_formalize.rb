@@ -1,18 +1,12 @@
 # frozen_string_literal: true
 
 module JFormalize
-  # Main runner
-  class Runner
-    attr_reader :file_name, :schema, :max_size
+  # Main engine organizer
+  class Engine
+    include JFormalize::Interactor::Organizer
 
-    def initialize(file_name, max_size = 100_000, schema = {})
-      @file_name = file_name
-      @max_size  = max_size
-      @schema    = schema
-    end
-
-    def run
-      JFormalize::Engine.new(@file_name, @max_size, @schema).run
-    end
+    organize JFormalize::Interactors::PreLoad,
+             JFormalize::Interactors::Objectify,
+             JFormalize::Interactors::Formalize
   end
 end
