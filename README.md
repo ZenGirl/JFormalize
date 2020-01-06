@@ -7,6 +7,21 @@ This gem was created based on several in-application gems created over the years
 The requirement to have a simple parser, validator, defaulter and formalizer for incoming JSON has recurred repeatedly for me over the years.
 This gem is simply a wrap up of those requirements.
 
+Loads, parses and validates JSON input into formalized ruby objects according to a schema.
+
+According to the dictionary, to formalize is to:
+
+1. To make agree with a single established standard or model
+2. To give official acceptance of as satisfactory
+3. To make solemn, or official, through ceremony or legal act
+4. To represent in a particular style
+
+While it is humorous to think of JSON involving solemnity, officialness or legality, 
+it certainly involves ceremony.
+
+This gem provides a simple way to validate an incoming JSON string, load it, parse it and formalize objects
+according to a provided schema into ruby objects.
+
 ## Acknowledgements
 
 Due to my choice not to include any external runtime dependencies, this gem includes a cut-down version of `Interactor`.
@@ -26,83 +41,54 @@ code is as close to Collective Ideas code.
 
 Apologies.
 
+## Usage
 
-## Details
+The engine requires 3 arguments: `json_string`, `max_size` and a `schema`.
 
-Loads, parses and validates JSON input into formalized ruby objects according to a schema.
-
-According to the dictionary, to formalize is to:
-
-1. To make agree with a single established standard or model
-2. To give official acceptance of as satisfactory
-3. To make solemn, or official, through ceremony or legal act
-4. To represent in a particular style
-
-While it is humorous to think of JSON involving solemnity, officialness or legality, 
-it certainly involves ceremony.
-
-This gem provides a simple way to validate an incoming JSON string, load it, parse it and formalize objects
-according to a provided schema into ruby objects.
-
-This involves a process like this:
-
-- PreLoad
-- Objectify
-- Formalize
-
-Each of these sub-processes are isolated, but use a shared context provided by an umbrella class.
-This is similar to the `Interactor` gem [which I love].
-
-## `PreLoad`
-
-This involves verifying that a provided string pass the following tests:
-
-1. It must be a string
-2. It must match a simple JSON regex
-3. It must not be too big
-4. It must not be empty
-5. It must not contain non UTF-8 characters
-
-The first is self explanatory.
-
-The incoming string must match a simple regex to proceed.
-That regex is shown below:
+The `json_string` is normally read from a file, but can be created from a hash like this:
 
 ```ruby
-# For reference, this is modified from:
-# https://stackoverflow.com/questions/2583472/regex-to-validate-json
-# rubocop:disable Style/MutableConstant, Style/RegexpLiteral
-JSON_REGEX = /(
-  # define subtypes and build up the json syntax, BNF-grammar-style
-  # The {0} is a hack to simply define them as named groups here but not match on them yet
-  # I added some atomic grouping to prevent catastrophic backtracking on invalid inputs
-  (?<number>  -?(?=[1-9]|0(?!\d))\d+(\.\d+)?([eE][+-]?\d+)?){0}
-  (?<boolean> true | false | null ){0}
-  (?<string>  " (?>[^"\\\\]* | \\\\ ["\\\\bfnrt\/] | \\\\ u [0-9a-f]{4} )* " ){0}
-  (?<array>   \[ (?> \g<json> (?: , \g<json> )* )? \s* \] ){0}
-  (?<pair>    \s* \g<string> \s* : \g<json> ){0}
-  (?<object>  \{ (?> \g<pair> (?: , \g<pair> )* )? \s* \} ){0}
-  (?<json>    \s* (?> \g<number> | \g<boolean> | \g<string> | \g<array> | \g<object> ) \s* ){0}
-)
-\A \g<json> \Z
-/uix
-# rubocop:enable Style/MutableConstant, Style/RegexpLiteral
+json_h = [
+  {
+    _id:              1,
+    url:              'http://goober.bubly.com/api/v2/users/1.json',
+    external_id:      '74341f74-9c79-49d5-9611-87ef9b6eb75f',
+    name:             'Francisca Rasmussen',
+    alias:            'Miss Coffey',
+    created_at:       '2019-12-31T05:19:46 -10:00',
+    active:           true,
+    verified:         true,
+    shared:           false,
+    locale:           'en-AU',
+    timezone:         'AEST',
+    last_login_at:    '2020-01-01T01:03:27 -10:00',
+    email:            'coffeyrasmussen@flotonic.com',
+    phone:            '0555-422-718',
+    signature:        'Don\'t Worry Be Happy!',
+    organization_id:  119,
+    tags:             %w(Springville Sutton Hartsville/Hartley Diaperville),
+    suspended:        true,
+    role:             'admin'
+  }
+]
+json_string = JSON.generate(json_h)
 ```
 
-The `rubocop` notations are simply to avoid unnecessary messages.
-
-The "must not be too big" requirement requires some explanation.
-
-The code tests that the string size does not exceed a limit.
-The allowed maximum size either defaults to 1,000,000 characters or a value provided to the pre-loader.
-
-> **Note:** At some point this may be changed to use `max_objects` as well as `max_size`
-
-After the string has been verified, the provided schema has to be checked.
-Here is an example schema:
+The `max_size` defaults to 100,000 if the value is `nil`.
+For example:
 
 ```ruby
-schema = {
+max_size = nil 
+max_size = 100_000
+```
+
+Are equivalent.
+
+The `schema` is a definition of the fields that are expected in the incoming data.
+For example:
+
+```ruby
+schema      = {
   _id:             {type: :integer},
   url:             {type: :url},
   external_id:     {type: :guid},
@@ -122,9 +108,10 @@ schema = {
   tags:            {type: :array, subtype: :string},
   suspended:       {type: :boolean},
   role:            {type: :string, allowed: %w[admin agent end_user]}
-}.freeze
+}
 ```
 
+Each key/value pair consists of the expected key name and a hash.
 The "types" here are a set of constants internal to the gem.
 The allowed set is as follows:
 
@@ -157,63 +144,114 @@ This also applies to arrays of `:object`
 
 The incoming schema can have an additional value pair to provide a default value.
 
-An incoming string may look like this:
+The engine can now be called with the arguments:
 
 ```ruby
-[{"_id":1,"url":"http://somewhere.over.the.rainbow.com/api/v2/users/1.json","external_id":"74341f74-9c79-49d5-9611-87ef9b6eb75f","name":"Edmund Glenn","alias":"Eddie","created_at":"2019-04-15T05:19:46 -10:00","active":true,"verified":true,"shared":false,"locale":"en-AU","timezone":"AEST","last_login_at":"2019-08-04T01:03:27 -10:00","email":"edmund.glenn@bianka.com","phone":"8335-422-718","signature":"Don't Worry Be Happy!","organization_id":119,"tags":["Brunsville","Juneeburg","Pricegan Beach","Mutgulbal"],"suspended":true,"role":"admin"}]
+result = JFormalize::Engine.call(
+  json_string: json_string,
+  max_size:    max_size,
+  schema:      schema
+)
 ```
 
-And, for clarity, this corresponds to the following hash:
+If all is ok, then the result hash various outputs:
+
+| key | meaning |
+| --- | ------- |
+| `success?` | `true` or `false` |
+| `errors` | Array of error messages |
+| `formalized_objects` | An array of formalized objects |
+
+Internally, 3 interactors are called to validate and formalize the incoming JSON.
+They are `PreLoad`, `Objectify` and `Formalize`. 
+Each may generate error messages and fail fast.
+
+Errors are generated based on these criteria:
+
+1. The `max_size` must be a reasonable size (between 100 and 10,000,000 characters)
+2. The `json_string` must:
+    1. be a string
+    2. not be empty
+    3. not be too big 
+    4. not contain non UTF-8 characters
+    5. match a simple JSON regex
+    6. be parseable
+3. The `schema` must:
+    1. be a hash
+    2. have values that are hashes
+    3. have values hash that have a `type` key
+    4. have values hash key `type` key that is allowed 
+4. The parsed `json_string` keys must:
+    1. validate against to the `type`
+
+
+
+
+
+
+
+
+
+## Details
+
+### `PreLoad`
+
+The incoming string must match a simple regex to proceed.
+That regex is shown below:
 
 ```ruby
-[
-  {
-    _id:             1,
-    url:             'http://somewhere.over.the.rainbow.com/api/v2/users/1.json',
-    external_id:     '74341f74-9c79-49d5-9611-87ef9b6eb75f',
-    name:            'Edmund Glenn',
-    alias:           'Eddie',
-    created_at:      '2019-04-15T05:19:46 -10:00',
-    active:          true,
-    verified:        true,
-    shared:          false,
-    locale:          'en-AU',
-    timezone:        'AEST',
-    last_login_at:   '2019-08-04T01:03:27 -10:00',
-    email:           'edmund.glenn@bianka.com',
-    phone:           '8335-422-718',
-    signature:       'Don\'t Worry Be Happy!',
-    organization_id: 119,
-    tags:            %w(Brunsville Juneeburg Pricegan\ Beach Mutgulbal),
-    suspended:       true,
-    role:            'admin'
-  }
-]
+# For reference, this is modified from:
+# https://stackoverflow.com/questions/2583472/regex-to-validate-json
+# rubocop:disable Style/MutableConstant, Style/RegexpLiteral
+JSON_REGEX = /(
+  # define subtypes and build up the json syntax, BNF-grammar-style
+  # The {0} is a hack to simply define them as named groups here but not match on them yet
+  # I added some atomic grouping to prevent catastrophic backtracking on invalid inputs
+  (?<number>  -?(?=[1-9]|0(?!\d))\d+(\.\d+)?([eE][+-]?\d+)?){0}
+  (?<boolean> true | false | null ){0}
+  (?<string>  " (?>[^"\\\\]* | \\\\ ["\\\\bfnrt\/] | \\\\ u [0-9a-f]{4} )* " ){0}
+  (?<array>   \[ (?> \g<json> (?: , \g<json> )* )? \s* \] ){0}
+  (?<pair>    \s* \g<string> \s* : \g<json> ){0}
+  (?<object>  \{ (?> \g<pair> (?: , \g<pair> )* )? \s* \} ){0}
+  (?<json>    \s* (?> \g<number> | \g<boolean> | \g<string> | \g<array> | \g<object> ) \s* ){0}
+)
+\A \g<json> \Z
+/uix
+# rubocop:enable Style/MutableConstant, Style/RegexpLiteral
 ```
 
-During the `PreLoad` phase, exceptions may be raised.
-All exceptions are in `JFormalise::Exceptions` and mostly wrap existing exceptions.
-The purpose of having separate exceptions is to provide fine grained control if required.
+> The `rubocop` notations are simply to avoid unnecessary messages.
 
-The exceptions are shown below:
+> **Note:** At some point this may be changed to use `max_objects` as well as `max_size`
 
-| Exception | Meaning |
-| --------- | ------- |
-| InputIsEmpty | The incoming string is empty |
-| InputHasNonUtf8Chars | The incoming string has non UTF-8 characters |
-| InputNotJson | The incoming string does not match the JSON regex |
-| InputTooBig | The incoming string size exceeds the maximum size |
-| SchemaNotJson | The incoming schema does not match the JSON regex |
-| SchemaNotHash | The incoming schema is not a hash |
-| SchemaHashKeyInvalid | In the schema hash, a key pair does not match the allowed values |
+After the string has been verified, the provided schema has to be checked.
+Here is an example schema:
 
+```ruby
+schema = {
+  _id:             {type: :integer},
+  url:             {type: :url},
+  external_id:     {type: :guid},
+  name:            {type: :string},
+  alias:           {type: :string},
+  created_at:      {type: :datetime},
+  active:          {type: :boolean},
+  verified:        {type: :boolean},
+  shared:          {type: :boolean},
+  locale:          {type: :locale},
+  timezone:        {type: :timezone},
+  last_login_at:   {type: :datetime},
+  email:           {type: :email},
+  phone:           {type: :regex, match: /\d\d\d\d-\d\d\d-\d\d\d/},
+  signature:       {type: :string},
+  organization_id: {type: :integer},
+  tags:            {type: :array, subtype: :string},
+  suspended:       {type: :boolean},
+  role:            {type: :string, allowed: %w[admin agent end_user]}
+}.freeze
+```
 
-
-
-
-
-
-## `Objectify`
+### `Objectify`
 
 The purpose of this is simply to isolate the parsing of the incoming string.
 
@@ -226,7 +264,7 @@ The output of this is an internal set of raw objects from the incoming string.
 
 
 
-## `Formalize`
+### `Formalize`
 
 This is the meat of the full process.
 The internal `objects` built by the `Objectify` class are iterated.
@@ -245,7 +283,7 @@ Exceptions are *not* raised during the process, but at the end if the errors lis
 That exception is `JFormalize::Exceptions::SchemaMismatch` and includes the error list (formatted).
 
 
-## Usage
+### Examples
 
 ```ruby
 json_value  = [
@@ -278,14 +316,11 @@ schema      = {
               tags:   {type: :string, subtype: :string},
               active: {type: :boolean}
               }
-obj = JFormalize::Engine.new(json_string, max_size, schema)
-obj.suppress_exceptions # Simply holds exceptions in an array - see example below
-obj.run
+result = JFormalize::Engine.call(json_string, max_size, schema)
 
-# Assuming no exceptions... :-)
-assert obj.success == true 
-puts obj.objects 
-> [
+# Assuming no errors... :-)
+assert result.success == true 
+assert_equal [
     {
       _id:    1,
       name:   'Billy Bob',
@@ -300,21 +335,10 @@ puts obj.objects
       tags:   %w(One Two Three),
       active: true                  
     }
-]
-
-# Exceptions example:
-assert obj.success == false
-puts obj.errors
-> [
-  'InputIsEmpty:          Incoming string is empty',
-  'InputHasNonUtf8Chars:  Incoming string has non UTF-8 characters [hellÔ!]',
-  'InputNotJson:          Incoming string does not match the JSON regex',
-  'InputTooBig:           Incoming string size exceeds the maximum size [100_000]',
-  'SchemaNotJson:         Incoming schema does not match the JSON regex',
-  'SchemaNotHash:         Incoming schema is not a hash',
-  'SchemaHashKeyInvalid:  Incoming schema hash has a key [org_id] pair does not match the allowed values [must_be_guid]'
-] 
+], result.formalized_objects 
 ```
+
+Notice that incoming keys that do not match the schema are dropped.
 
 ## Installation
 
@@ -334,104 +358,12 @@ Or install it yourself as:
 
     clear; bundle exec rake; bundle exec rubocop
 
+I used `minitest` for testing to reduce any external dependencies.
+
 ## Git
 
-My `git` process is as follows:
-
-There is a `master` branch. 
-From that a `develop` branch is created.
-For each "feature" a new numbered branch is created:
-
-```
-kim@tinka ~/RubymineProjects/JFormalize (develop)$ git checkout -b features/001_ExtendReadme
-Switched to a new branch 'features/001_ExtendReadme'
-kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$
-```
-
-The name and machine is irrelevant, but the current branch is shown in brackets.
-Note that the numbering is somewhat arbitrary and once main line development is completed, it would switch to issue numbers.
-
-> The *bash* scripts to provide this functionality is added to the base of this doc.
-
-Once a feature branch is created, changes are made to the code base.
-Once these reach a reasonable point, a commit is made:
-
-```bash
-git commit -a -m 'Extended Readme'
-```
-
-And a push occurs:
-
-```
-kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git push
-fatal: The current branch features/001_ExtendReadme has no upstream branch.
-To push the current branch and set the remote as upstream, use
-
-    git push --set-upstream origin features/001_ExtendReadme
-
-kim@tinka ~/RubymineProjects/JFormalize (features/001_ExtendReadme)$ git push --set-upstream origin features/001_ExtendReadme
-Enumerating objects: 5, done.
-Counting objects: 100% (5/5), done.
-Delta compression using up to 8 threads
-Compressing objects: 100% (3/3), done.
-Writing objects: 100% (3/3), 749 bytes | 749.00 KiB/s, done.
-Total 3 (delta 2), reused 0 (delta 0)
-remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
-remote:
-remote: Create a pull request for 'features/001_ExtendReadme' on GitHub by visiting:
-remote:      https://github.com/ZenGirl/JFormalize/pull/new/features/001_ExtendReadme
-remote:
-To github.com:ZenGirl/JFormalize.git
- * [new branch]      features/001_ExtendReadme -> features/001_ExtendReadme
-Branch 'features/001_ExtendReadme' set up to track remote branch 'features/001_ExtendReadme' from 'origin'.
-```
-
-The first notice only shows once if no upstream branch exists. 
-Once done, only a `git push` is required.
-
-After the branch is complete and accepted, it can be merged back into `develop`:
-
-```bash
-git checkout develop
-git merge features/001_ExtendReadme
-git push
-```
-
-Once a set of features are complete, `develop` can be merged into `master`, the version updated and pushed.
-That done, the gem can be released.
-
-An example process for an example set of features is shown below:
-
-```
-git checkout develop
-
-# Some feature:
-git checkout -b features/123_SomeFeature
-git commit -a -m 'Meaningful message'
-git commit -a -m 'Meaningful message'
-git commit -a -m 'Meaningful message'
-git push
-git checkout develop
-git merge features/123_Feature123
-git push
-
-# Another feature:
-git checkout -b features/124_AnotherFeature
-git commit -a -m 'Meaningful message'
-git commit -a -m 'Meaningful message'
-git commit -a -m 'Meaningful message'
-git push
-git checkout develop
-git merge features/124_AnotherFeature
-git push
-
-# Release
-git checkout master
-git merge develop
-[update version.rb]
-git commit -a -m 'Update to N.N.N'
-git push
-```
+[Full details](./GitFlow.md)
+[Bash details](./GitBash.md)
 
 ### Versioning
 
