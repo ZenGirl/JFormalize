@@ -52,11 +52,11 @@ module JFormalize
       end
 
       def must_be_url(_, value)
-        value.match(JFormalize::Constants::URL_RE)
+        value.to_s.match(JFormalize::Constants::URL_RE)
       end
 
       def must_be_datetime(_, value)
-        Time.parse(value)
+        Time.parse(value.to_s)
       rescue ArgumentError
         nil
       end
@@ -100,6 +100,7 @@ module JFormalize
 
       # rubocop:disable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
       def subtype_case(err_msg, subtype, val)
+        context.errors ||= []
         case subtype
         when :string
           context.errors << err_msg unless must_be_string(nil, val)
@@ -120,7 +121,7 @@ module JFormalize
         when :email
           context.errors << err_msg unless must_be_email(nil, val)
         else
-          context.errors << "key [#{key}] subtype [#{subtype}] is not supported"
+          context.errors << "subtype [#{subtype}] is not supported"
         end
       end
       # rubocop:enable Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/MethodLength, Metrics/PerceivedComplexity
