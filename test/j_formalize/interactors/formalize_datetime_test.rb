@@ -17,8 +17,8 @@ class FormalizeDatetimeTest < Minitest::Test
     schema      = {created_at: {type: :datetime}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [created_at] value [not an datetime] is not a valid datetime'
-    assert_equal result.errors, ['key [created_at] value [not an datetime] is not a valid datetime']
+    assert_equal true, result.message.start_with?('key [created_at] value [not an datetime] is not a valid datetime')
+    assert_equal true, result.errors[0].start_with?('key [created_at] value [not an datetime] is not a valid datetime')
   end
 
   def test_passes_datetime

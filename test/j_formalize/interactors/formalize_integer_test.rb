@@ -17,8 +17,8 @@ class FormalizeIntegerTest < Minitest::Test
     schema      = {_id: {type: :integer}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [_id] value [not an integer] is not a valid integer'
-    assert_equal result.errors, ['key [_id] value [not an integer] is not a valid integer']
+    assert_equal true, result.message.start_with?('key [_id] value [not an integer] is not a valid integer')
+    assert_equal true, result.errors[0].start_with?('key [_id] value [not an integer] is not a valid integer')
   end
 
   def test_passes_integer

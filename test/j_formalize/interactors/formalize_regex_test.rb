@@ -19,8 +19,8 @@ class FormalizeRegexTest < Minitest::Test
     schema      = {phone: {type: :regex, match: @regex1}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [phone] value [4732] is not a valid regex'
-    assert_equal result.errors, ['key [phone] value [4732] is not a valid regex']
+    assert_equal true, result.message.start_with?('key [phone] value [4732] is not a valid regex')
+    assert_equal true, result.errors[0].start_with?('key [phone] value [4732] is not a valid regex')
   end
 
   def test_passes_string

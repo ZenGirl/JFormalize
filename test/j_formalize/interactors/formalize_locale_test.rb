@@ -17,8 +17,8 @@ class FormalizeLocaleTest < Minitest::Test
     schema      = {locale: {type: :locale}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [locale] value [4732] is not a valid locale'
-    assert_equal result.errors, ['key [locale] value [4732] is not a valid locale']
+    assert_equal true, result.message.start_with?('key [locale] value [4732] is not a valid locale')
+    assert_equal true, result.errors[0].start_with?('key [locale] value [4732] is not a valid locale')
   end
 
   def test_passes_string

@@ -32,7 +32,7 @@ module JFormalize
           if result
             formal[key] = value
           else
-            context.errors << "key [#{key}] value [#{value}] is not a valid #{method_type}"
+            context.errors << "key [#{key}] value [#{value}] is not a valid #{method_type} - Object: #{object}"
           end
         end
         formal

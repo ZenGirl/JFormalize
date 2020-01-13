@@ -17,8 +17,8 @@ class FormalizeBooleanTest < Minitest::Test
     schema      = {active: {type: :boolean}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [active] value [not a boolean] is not a valid boolean'
-    assert_equal result.errors, ['key [active] value [not a boolean] is not a valid boolean']
+    assert_equal true, result.message.start_with?('key [active] value [not a boolean] is not a valid boolean')
+    assert_equal true, result.errors[0].start_with?('key [active] value [not a boolean] is not a valid boolean')
   end
 
   def test_passes_boolean

@@ -17,8 +17,8 @@ class FormalizeArrayTest < Minitest::Test
     schema      = {tags: {type: :array, subtype: :string}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [tags] value [4732] is not a valid array'
-    assert_equal result.errors, ['key [tags] value [4732] is not a valid array']
+    assert_equal true, result.message.start_with?('key [tags] value [4732] is not a valid array')
+    assert_equal true, result.errors[0].start_with?('key [tags] value [4732] is not a valid array')
   end
 
   def test_fails_mixed_subtypes
@@ -29,7 +29,7 @@ class FormalizeArrayTest < Minitest::Test
     assert_equal result.errors, [
       'key [tags] array value [1] is not a string',
       'key [tags] array value [2] is not a string',
-      'key [tags] value [[1, "hello", 2, "there"]] is not a valid array'
+      'key [tags] value [[1, "hello", 2, "there"]] is not a valid array - Object: {:tags=>[1, "hello", 2, "there"]}'
     ]
   end
 

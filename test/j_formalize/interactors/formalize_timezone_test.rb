@@ -17,8 +17,8 @@ class FormalizeTimezoneTest < Minitest::Test
     schema      = {timezone: {type: :timezone}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [timezone] value [4732] is not a valid timezone'
-    assert_equal result.errors, ['key [timezone] value [4732] is not a valid timezone']
+    assert_equal true, result.message.start_with?('key [timezone] value [4732] is not a valid timezone')
+    assert_equal true, result.errors[0].start_with?('key [timezone] value [4732] is not a valid timezone')
   end
 
   def test_passes_string

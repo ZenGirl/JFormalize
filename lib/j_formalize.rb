@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'json'
+require 'time'
+
 require 'j_formalize/constants'
 require 'j_formalize/interactors/common_context'
 require 'j_formalize/interactors/pre_load'

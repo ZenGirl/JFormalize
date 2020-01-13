@@ -17,8 +17,8 @@ class FormalizeStringTest < Minitest::Test
     schema      = {name: {type: :string}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [name] value [4732] is not a valid string'
-    assert_equal result.errors, ['key [name] value [4732] is not a valid string']
+    assert_equal true, result.message.start_with?('key [name] value [4732] is not a valid string')
+    assert_equal true, result.errors[0].start_with?('key [name] value [4732] is not a valid string')
   end
 
   def test_passes_string

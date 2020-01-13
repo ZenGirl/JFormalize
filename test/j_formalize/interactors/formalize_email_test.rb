@@ -17,8 +17,8 @@ class FormalizeEmailTest < Minitest::Test
     schema      = {email: {type: :email}}
     result      = @subject.call({raw_objects: raw_objects, schema: schema})
     assert_equal true, result.failure?
-    assert_equal result.message, 'key [email] value [4732] is not a valid email'
-    assert_equal result.errors, ['key [email] value [4732] is not a valid email']
+    assert_equal true, result.message.start_with?('key [email] value [4732] is not a valid email')
+    assert_equal true, result.errors[0].start_with?('key [email] value [4732] is not a valid email')
   end
 
   def test_passes_string
